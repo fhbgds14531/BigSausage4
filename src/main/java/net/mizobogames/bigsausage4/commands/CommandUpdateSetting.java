@@ -2,11 +2,11 @@ package net.mizobogames.bigsausage4.commands;
 
 import net.dv8tion.jda.api.entities.Message;
 import net.mizobogames.bigsausage4.BigSausage;
-import net.mizobogames.bigsausage4.GuildSettings;
 import net.mizobogames.bigsausage4.Util;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 public class CommandUpdateSetting extends CommandBase{
 
@@ -20,91 +20,63 @@ public class CommandUpdateSetting extends CommandBase{
 		if(args.size() != 4){
 			if(args.size() == 2){
 				sendMessageToChannel(triggerMessage.getTextChannel(), "Valid setting names are : ```" +
-						"message-parsing-audio		message-parsing-images		commanded-audio			commanded-images\n" +
-						"multi-linking				allow-tts-command			 max-queued-clips-per-message```");
+						"allow_message_parsing_audio		allow_message_parsing_image		allow_commanded_voice_clips			allow_commanded_images\n" +
+						"allow_multi_link				allow_tts			 max_audio_clips_per_message		max_dice_rolls_to_track```");
 				return;
 			}
 			sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid number of arguments!");
-			return;
 		}else{
+			String booleanResponse = "Invalid argument! That setting requires a value of either \"enable\" or \"disable\".";
+			String integerResponse = "Invalid argument! That setting requires a positive integer.";
 			String setting = args.get(2);
 			String value = args.get(3);
-			if(!(value.contentEquals("enabled") || value.contentEquals("disabled") || Util.isInteger(value, 10))){
-				sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid argument. Setting values must either be \"enabled\", \"disabled\", or an integer.");
+			if(!(value.contentEquals("enable") || value.contentEquals("disable") || Util.isInteger(value, 10))){
+				sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid argument. Setting values must either be \"enable\", \"disable\", or an integer.");
 				return;
 			}
-			GuildSettings settings = BigSausage.getFileManager().getSettingsForGuild(triggerMessage.getGuild());
+			Properties guildProperties = BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild());
+
 			switch(setting){
-				case "message-parsing-audio":
+				case "allow_message_parsing_audio":
+				case "allow_message_parsing_image":
+				case "allow_tts":
+				case "allow_multi_link":
+				case "allow_commanded_images":
+				case "allow_commanded_voice_clips":
 					if(Util.isInteger(value, 10)){
-						sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid argument! That setting requires a value of either \"enabled\" or \"disabled\".");
+						sendMessageToChannel(triggerMessage.getTextChannel(), booleanResponse);
 						return;
 					}
-					settings.setMessageParsingAudioTriggers(getState(value));
+					guildProperties.setProperty(setting, String.valueOf(getState(value)));
 					break;
-				case "message-parsing-images":
-					if(Util.isInteger(value, 10)){
-						sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid argument! That setting requires a value of either \"enabled\" or \"disabled\".");
-						return;
-					}
-					settings.setMessageParsingImageTriggers(getState(value));
-					break;
-				case "commanded-audio":
-					if(Util.isInteger(value, 10)){
-						sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid argument! That setting requires a value of either \"enabled\" or \"disabled\".");
-						return;
-					}
-					settings.setCommandedVoiceClips(getState(value));
-					break;
-				case "commanded-images":
-					if(Util.isInteger(value, 10)){
-						sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid argument! That setting requires a value of either \"enabled\" or \"disabled\".");
-						return;
-					}
-					settings.setCommandedImages(getState(value));
-					break;
-				case "multi-linking":
-					if(Util.isInteger(value, 10)){
-						sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid argument! That setting requires a value of either \"enabled\" or \"disabled\".");
-						return;
-					}
-					settings.setAllowMultipleLinkablesPerMessage(getState(value));
-					break;
-				case "allow-tts-command":
-					if(Util.isInteger(value, 10)){
-						sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid argument! That setting requires a value of either \"enabled\" or \"disabled\".");
-						return;
-					}
-					settings.setAllowTtsMessages(getState(value));
-					break;
-				case "max-queued-clips-per-message":
+				case "max_audio_clips_per_message":
+				case "max_dice_rolls_to_track":
 					if(Util.isInteger(value, 10) && Integer.parseInt(value) > 0){
-						settings.setMaxAudioClipsToQueuePerMessage(Integer.parseInt(value));
+						guildProperties.setProperty(setting, String.valueOf(Integer.parseInt(value)));
 					}else{
-						sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid argument! That setting requires a positive integer.");
+						sendMessageToChannel(triggerMessage.getTextChannel(), integerResponse);
 						return;
 					}
 					break;
 				case "all":
 					if(Util.isInteger(value, 10)){
-						sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid argument! That setting requires a value of either \"enabled\" or \"disabled\".");
+						sendMessageToChannel(triggerMessage.getTextChannel(), booleanResponse);
 						return;
 					}else{
-						settings.setMessageParsingAudioTriggers(getState(value));
-						settings.setMessageParsingImageTriggers(getState(value));
-						settings.setCommandedVoiceClips(getState(value));
-						settings.setCommandedImages(getState(value));
-						settings.setAllowMultipleLinkablesPerMessage(getState(value));
-						settings.setAllowTtsMessages(getState(value));
+						guildProperties.setProperty("allow_message_parsing_audio", String.valueOf(getState(value)));
+						guildProperties.setProperty("allow_message_parsing_image", String.valueOf(getState(value)));
+						guildProperties.setProperty("allow_tts", String.valueOf(getState(value)));
+						guildProperties.setProperty("allow_multi_link", String.valueOf(getState(value)));
+						guildProperties.setProperty("allow_commanded_images", String.valueOf(getState(value)));
+						guildProperties.setProperty("allow_commanded_voice_clips", String.valueOf(getState(value)));
 					}
 					break;
 				default:
 					sendMessageToChannel(triggerMessage.getTextChannel(), "Unknown setting! Valid setting names are : ```" +
-							"message-parsing-audio		message-parsing-images		commanded-audio		commanded-images\n" +
-							"multi-linking				allow-tts-command			max-queued-clips-per-message		all```");
+							"allow_message_parsing_audio		allow_message_parsing_image		allow_commanded_voice_clips			allow_commanded_images\n" +
+							"allow_multi_link				allow_tts			 max_audio_clips_per_message		max_dice_rolls_to_track		all```");
 					break;
 			}
-			BigSausage.getFileManager().saveSettingsForGuild(settings);
 			sendMessageToChannel(triggerMessage.getTextChannel(), "Setting updated!");
 		}
 

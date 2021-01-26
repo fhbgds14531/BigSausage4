@@ -1,7 +1,5 @@
 package net.mizobogames.bigsausage4.commands.rolls;
 
-import net.mizobogames.bigsausage4.BSException;
-
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,17 +8,18 @@ import java.util.regex.Pattern;
 
 public class DiceRoll{
 
-	private final int rollsToTrack = 10;
+	private final int rollsToTrack;
 
 	private List<Die> dice;
 	private int modifier;
 
-	private static final String regex = "(\\d+)d(\\d+)([\\+\\-](\\d+))*";
+	private static final String regex = "(\\d+)d(\\d+)([+\\-](\\d+))*";
 
 	Pattern pattern;
 	Matcher matcher;
 
-	public DiceRoll(String rollText) {
+	public DiceRoll(String rollText, int rollsToTrack) {
+		this.rollsToTrack = rollsToTrack;
 		pattern = Pattern.compile(regex);
 		matcher = pattern.matcher(rollText);
 
@@ -62,26 +61,26 @@ public class DiceRoll{
 			result += roll;
 		}
 		result += modifier;
-		String output = "Result: " + result + "\nRolls: `";
+		StringBuilder output = new StringBuilder("Result: " + result + "\nRolls: `");
 		int count = 0;
 		for(Integer integer : rolls){
-			output += integer;
+			output.append(integer);
 			count++;
 			if(count >= rollsToTrack || count >= rolls.size()){
 				if(count != rolls.size()){
-					output += "...";
+					output.append("...");
 				}
 				break;
 			}else{
-				output += ", ";
+				output.append(", ");
 			}
 		}
 
-		output += "`";
+		output.append("`");
 		if(modifier != 0){
-			output += "\nModifier: `" + matcher.group(3) + "`";
+			output.append("\nModifier: `").append(matcher.group(3)).append("`");
 		}
-		return String.valueOf(output);
+		return output.toString();
 	}
 
 }

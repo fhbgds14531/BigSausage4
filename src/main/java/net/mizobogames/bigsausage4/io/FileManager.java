@@ -4,7 +4,9 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
-import net.mizobogames.bigsausage4.*;
+import net.mizobogames.bigsausage4.BigSausage;
+import net.mizobogames.bigsausage4.Reporting;
+import net.mizobogames.bigsausage4.Util;
 import net.mizobogames.bigsausage4.commands.EnumPermissionLevel;
 import net.mizobogames.bigsausage4.linking.Linkable;
 import net.mizobogames.bigsausage4.linking.Linkable.EnumLinkableType;
@@ -41,9 +43,11 @@ public class FileManager {
 	private void initPermissionsForNewGuild(Guild guild){
 		if(!permissionsForGuilds.containsKey(guild.getIdLong())){
 			initPermissionsForGuild(guild);
-		}else{
-			System.err.println("Guild \"" + guild.getName() + "\" (" + guild.getIdLong() + ") already has an entry in the permissions file. Skipping...");
+		}//else{
+		/*
+		System.out.println("Guild \"" + guild.getName() + "\" (" + guild.getIdLong() + ") already has an entry in the permissions file. Skipping...");
 		}
+		*/
 	}
 
 	public void initPermissionsForGuild(Guild guild){
@@ -71,9 +75,11 @@ public class FileManager {
 	public void initLinkablesForNewGuild(Guild guild){
 		if(!linkablesPerGuild.containsKey(guild.getIdLong())){
 			linkablesPerGuild.put(guild.getIdLong(), new ArrayList<>());
-		}else{
-			System.err.println("Guild " + Util.getDisplayNameAndIdForGuild(guild) + " already has a linkables entry. Skipping...");
+		}//else{
+			/*
+		System.out.println("Guild " + Util.getDisplayNameAndIdForGuild(guild) + " already has a linkables entry. Skipping...");
 		}
+		*/
 	}
 
 	public void addLinkableToGuild(Guild guild, Linkable linkable){
@@ -173,8 +179,11 @@ public class FileManager {
 	}
 
 	private void loadAll(){
+		long time1 = System.currentTimeMillis();
 		loadPermissions();
 		loadLinkables();
+		long time2 = System.currentTimeMillis();
+		System.out.println("Loaded all permissions and linkables in " + Util.getTimeDiffSecondsFromMillis(time1, time2) + " seconds");
 	}
 
 	public void loadPermissions(){
@@ -237,7 +246,7 @@ public class FileManager {
 			return Files.readAllLines(ttsFile.toPath());
 		}catch(Exception e){
 			BigSausage.reporter.reportAndPrintError(e);
-			return new ArrayList<String>();
+			return new ArrayList<>();
 		}
 	}
 
@@ -279,45 +288,42 @@ public class FileManager {
 		saveObjectToFile(linkablesFile, linkablesPerGuild, true);
 	}
 
-	public void saveSettingsForGuild(GuildSettings settings){
-		try{
-			File settingsFile = new File("files/" + settings.getGuildId()+ "/settings/guild_settings.bssf");
-			assertDirExists("files/" + settings.getGuildId() + "/settings/");
-
-			saveObjectToFile(settingsFile, settings, true);
-			MessageParser.reloadSettings();
-		}catch(Exception e){
-			Reporting.instance.reportAndPrintError(e);
-		}
-	}
-
-	public GuildSettings getSettingsForGuild(Guild guild){
-		GuildSettings loaded = null;
-		File settingsFile;
-		try{
-			settingsFile = new File("files/" + guild.getIdLong() + "/settings/guild_settings.bssf");
-			assertDirExists("files/" + guild.getIdLong() + "/settings/");
-
-			Object settingsInput = readObjectFromFile(settingsFile);
-			if(settingsInput instanceof GuildSettings){
-				loaded = (GuildSettings) settingsInput;
-			}else{
-				throw new IOException("The object saved in the settings file is not a GuildSettings object.");
-			}
-		}catch(Exception e){
-			Reporting.instance.reportAndPrintError(e);
-		}
-		if(loaded == null){
-			loaded = new GuildSettings(guild);
-			System.err.println("Could not successfully load settings for guild " + Util.getDisplayNameAndIdForGuild(guild) + ", loading defaults.");
-		} else {
-			System.out.println("Settings file successfully loaded for guild " + Util.getDisplayNameAndIdForGuild(guild));
-		}
-		return loaded;
-	}
-
 	public void updateUserPermissionsForGuild(User user, Guild guild, EnumPermissionLevel newPermissionLevel){
 		permissionsForGuilds.get(guild.getIdLong()).put(user.getIdLong(), newPermissionLevel);
 		savePermissions();
+	}
+
+	public Properties loadPropertiesForGuild(Guild guild, Properties guildProperties){
+		Properties loadedProperties = new Properties(guildProperties);
+		try{
+			File propertiesFile = new File("files/" + guild.getIdLong() + "/settings/guild_properties.bss");
+			if(!propertiesFile.exists()){
+				savePropertiesForGuild(guild, loadedProperties);
+			}
+			BufferedInputStream in = new BufferedInputStream(new FileInputStream(propertiesFile));
+			loadedProperties.load(in);
+			in.close();
+		}catch(Exception e){
+			Reporting.instance.reportAndPrintError(e);
+		}
+		return loadedProperties;
+	}
+
+	public void savePropertiesForGuild(Guild guild, Properties properties){
+		try{
+			File propertiesFile;
+			if(guild != null){
+				propertiesFile = new File("files/" + guild.getIdLong() + "/settings/guild_properties.bss");
+			}else{
+				propertiesFile = new File("files/default_properties.bss");
+			}
+			if(!propertiesFile.exists()) propertiesFile.createNewFile();
+			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(propertiesFile));
+			properties.store(out, "=== Settings Version: " + SettingsManager.SETTINGS_VERSION + " ===");
+			out.close();
+		}catch(Exception e){
+			Reporting.instance.reportAndPrintError(e);
+		}
+
 	}
 }

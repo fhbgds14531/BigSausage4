@@ -1,21 +1,17 @@
 package net.mizobogames.bigsausage4.commands;
 
-import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.EmbedType;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.MessageEmbed.Thumbnail;
-import net.dv8tion.jda.internal.handle.MessageCreateHandler;
 import net.mizobogames.bigsausage4.BigSausage;
 import net.mizobogames.bigsausage4.Reporting;
-import net.mizobogames.bigsausage4.Util;
 import net.mizobogames.bigsausage4.linking.Linkable;
 import net.mizobogames.bigsausage4.linking.Linkable.EnumLinkableType;
 import net.mizobogames.bigsausage4.linking.Trigger;
 
 import java.security.SecureRandom;
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 public class CommandImage extends CommandBase{
@@ -26,7 +22,7 @@ public class CommandImage extends CommandBase{
 
 	@Override
 	public void execute(Message triggerMessage){
-		if(BigSausage.getFileManager().getSettingsForGuild(triggerMessage.getGuild()).isCommandedImages()){
+		if(Boolean.getBoolean(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("allow_commanded_images"))){
 			try{
 				Map<Linkable, Integer> objectsToLink = new HashMap<>();
 				List<String> args = Arrays.asList(triggerMessage.getContentRaw().split(" "));
@@ -46,9 +42,7 @@ public class CommandImage extends CommandBase{
 					SecureRandom random = new SecureRandom();
 					objectsToLink.put(BigSausage.getFileManager().getLinkablesForGuildOfType(triggerMessage.getGuild(), EnumLinkableType.IMAGE).get(random.nextInt(BigSausage.getFileManager().getLinkablesForGuildOfType(triggerMessage.getGuild(), EnumLinkableType.IMAGE).size())), 1);
 				}
-				Iterator<Entry<Linkable, Integer>> iterator = objectsToLink.entrySet().iterator();
-				while(iterator.hasNext()){
-					Entry<Linkable, Integer> entry = iterator.next();
+				for(Entry<Linkable, Integer> entry : objectsToLink.entrySet()){
 					for(int i = entry.getValue(); i > 0; i--){
 						triggerMessage.getTextChannel().sendFile(entry.getKey().getLinkedFile()).queue();
 					}

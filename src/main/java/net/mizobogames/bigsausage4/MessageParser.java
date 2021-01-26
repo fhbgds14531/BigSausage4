@@ -3,35 +3,38 @@ package net.mizobogames.bigsausage4;
 import net.dv8tion.jda.api.entities.*;
 import net.mizobogames.bigsausage4.commands.CommandBase;
 import net.mizobogames.bigsausage4.io.AuditLogger;
+import net.mizobogames.bigsausage4.io.SettingsManager;
 import net.mizobogames.bigsausage4.io.audio.BSAudioManager;
 import net.mizobogames.bigsausage4.linking.Linkable;
 import net.mizobogames.bigsausage4.linking.Linkable.EnumLinkableType;
 import net.mizobogames.bigsausage4.linking.Trigger;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MessageParser{
 
 	private static Map<Guild, Map<EnumLinkableType, Boolean>> parseForTriggersPerGuild;
 
-	public MessageParser(){
-		reloadSettings();
-	}
-
 	public static void reloadSettings(){
 		parseForTriggersPerGuild = new HashMap<>();
 		List<Guild> guilds = BigSausage.jda.getGuilds();
+		if(BigSausage.settingsManager == null){
+			System.err.println("Settings manager is null!");
+			return;
+		}
 		for(Guild guild : guilds){
-			GuildSettings settings = BigSausage.getFileManager().getSettingsForGuild(guild);
 			Map<EnumLinkableType, Boolean> guildSettingsMap = new HashMap<>();
-			guildSettingsMap.put(EnumLinkableType.AUDIO, settings.isMessageParsingAudioTriggers());
-			guildSettingsMap.put(EnumLinkableType.IMAGE, settings.isMessageParsingImageTriggers());
+			SettingsManager manager = BigSausage.settingsManager;
+			Properties properties = manager.getSettingsForGuild(guild);
+			String property1 = properties.getProperty("allow_message_parsing_audio");
+			String property2 = properties.getProperty("allow_message_parsing_image");
+
+			guildSettingsMap.put(EnumLinkableType.AUDIO, Boolean.getBoolean(BigSausage.settingsManager.getSettingsForGuild(guild).getProperty("allow_message_parsing_audio")));
+			guildSettingsMap.put(EnumLinkableType.IMAGE, Boolean.getBoolean(BigSausage.settingsManager.getSettingsForGuild(guild).getProperty("allow_message_parsing_image")));
 			parseForTriggersPerGuild.put(guild, guildSettingsMap);
 		}
 	}
+
 	public static boolean parseMessageForCommandAndExecute(Message m){
 		try{
 			String messageText = m.getContentRaw().toLowerCase();
@@ -58,7 +61,7 @@ public class MessageParser{
 						m.getTextChannel().sendMessage("You don't have permission to use that command.\n" +
 															   "Minimum permission level required: `" + c.getPermissionLevel().toString() +
 															   "`\n" + "Your permission level:             `" +
-															   BigSausage.getFileManager().getPermissionsForUserInGuild(m.getGuild(), m.getAuthor()).toString() + "`");
+															   BigSausage.getFileManager().getPermissionsForUserInGuild(m.getGuild(), m.getAuthor()).toString() + "`").queue();
 						AuditLogger.addToAuditLogForGuild(m.getGuild(), "User \"" + m.getAuthor().getName() + "\" (" + m.getAuthor().getIdLong() + ") tried to use a command they didn't have permission for. (" +
 								c.getName() + ").");
 					}
@@ -75,8 +78,8 @@ public class MessageParser{
 	}
 
 	public static void parseMessageForTriggers(Message m){
-		List<String> words = Arrays.asList(m.getContentDisplay().toLowerCase().split(" "));
-		GuildSettings settings = BigSausage.getFileManager().getSettingsForGuild(m.getGuild());
+		String[] words = m.getContentDisplay().toLowerCase().split(" ");
+		Properties settings = BigSausage.settingsManager.getSettingsForGuild(m.getGuild());
 
 		List<Linkable> guildLinkables = BigSausage.getFileManager().getLinkablesForGuild(m.getGuild());
 		int linkedSoFar = 0;
@@ -104,8 +107,8 @@ public class MessageParser{
 								try{
 									BSAudioManager.queueFile(linkable.getLinkedFile(), m.getGuild(), voiceChannel, sender, false);
 									linkedSoFar++;
-									if(!settings.isAllowMultipleLinkablesPerMessage()) return;
-									if(linkedSoFar >= settings.getMaxAudioClipsToQueuePerMessage()) return;
+									if(!Boolean.getBoolean(settings.getProperty("allow_multi_linking"))) return;
+									if(linkedSoFar >= Integer.parseInt(settings.getProperty("max_audio_clips_per_message"))) return;
 								}catch(Exception e){
 									BigSausage.reporter.reportAndPrintError(e);
 								}
@@ -115,7 +118,7 @@ public class MessageParser{
 							if(parseForTriggersPerGuild.get(m.getGuild()).get(EnumLinkableType.IMAGE)){
 								m.getTextChannel().sendFile(linkable.getLinkedFile()).queue();
 								linkedSoFar++;
-								if(!settings.isAllowMultipleLinkablesPerMessage()) return;
+								if(!Boolean.getBoolean(settings.getProperty("allow_multi_linking"))) return;
 							}
 							break;
 					}
@@ -123,5 +126,4 @@ public class MessageParser{
 			}
 		}
 	}
-
 }

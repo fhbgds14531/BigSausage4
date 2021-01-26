@@ -2,6 +2,7 @@ package net.mizobogames.bigsausage4;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -14,6 +15,7 @@ import net.mizobogames.bigsausage4.commands.CommandBase;
 import net.mizobogames.bigsausage4.commands.Commands;
 import net.mizobogames.bigsausage4.commands.EnumPermissionLevel;
 import net.mizobogames.bigsausage4.io.FileManager;
+import net.mizobogames.bigsausage4.io.SettingsManager;
 import net.mizobogames.bigsausage4.io.audio.BSAudioManager;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,17 +28,18 @@ import java.util.List;
 
 public class BigSausage extends ListenerAdapter {
 
-	public static final String PREFIX = "!bs";
-	private static final String TOKEN_FILE_NAME = "BigSausage.token";
+	public static final String PREFIX = "!bd";
+	private static final String TOKEN_FILE_NAME = "BigSausageDEBUG.token";
 	public static final long ME = 198575970624471040L;
 	public static User MY_USER = null;
-	public static final String VERSION = "4.1";
-	public static final String CHANGELOG = "Added !bs roll. Some minor bugfixes and improvements.";
+	public static final String VERSION = "4.2";
+	public static final String CHANGELOG = "Reworked the settings behind the scenes to make use of java.util.Properties.";
 	private static final String IGNORE_TOKEN = "<i";
 
 	public static Commands commands;
 	private static FileManager fileManager;
 	public static BSAudioManager audioManager;
+	public static SettingsManager settingsManager;
 
 	public static JDA jda;
 	private static BigSausage instance;
@@ -45,12 +48,14 @@ public class BigSausage extends ListenerAdapter {
 
 	private List<Guild> guilds;
 
+	private static long startTime;
+
 	public BigSausage(){
-		instance = this;
-		commands = new Commands();
-		reporter = new Reporting();
-		audioManager = new BSAudioManager();
-		guilds = new ArrayList<>();
+		if(instance == null) instance = this;
+		if(commands == null) commands = new Commands();
+		if(reporter == null) reporter = new Reporting();
+		if(audioManager == null) audioManager = new BSAudioManager();
+		if(guilds == null) guilds = new ArrayList<>();
 	}
 
 	public static BigSausage getBot(){
@@ -59,15 +64,24 @@ public class BigSausage extends ListenerAdapter {
 
 	@Override
 	public void onReady(@NotNull ReadyEvent event){
-		MY_USER = jda.getGuildById(382053109788049429L).getMemberById(ME).getUser();
-		fileManager = new FileManager();
+		if(MY_USER == null) {
+			MY_USER = jda.getUserById(ME);
+		}
+		if(fileManager == null) fileManager = new FileManager();
+
+		if(settingsManager == null)	settingsManager = SettingsManager.init(guilds);
 		for(Guild g : guilds){
 			fileManager.initPermissionsAndLinkablesForNewGuild(g);
-			fileManager.saveSettingsForGuild(fileManager.getSettingsForGuild(g));
 		}
 		fileManager.savePermissions();
 		fileManager.saveLinkables();
-		new MessageParser();
+
+		MessageParser.reloadSettings();
+
+		System.out.println(Util.ASCIILogo());
+		System.out.println("\nReady to serve you!\n");
+		long readyTime = System.currentTimeMillis();
+		System.out.println("Startup completed in " + Util.getTimeDiffSecondsFromMillis(startTime, readyTime) + " seconds");
 	}
 
 	@Override
@@ -75,13 +89,12 @@ public class BigSausage extends ListenerAdapter {
 		FileManager.assertDirExists("files/" + event.getGuild().getIdLong());
 		System.out.println("Guild " + Util.getDisplayNameAndIdForGuild(event.getGuild()) + " is ready, adding to initialization queue...");
 		guilds.add(event.getGuild());
-		System.out.println("Done!\n");
 	}
 
 	@Override
 	public void onGuildJoin(@NotNull GuildJoinEvent event){
 		fileManager.initPermissionsAndLinkablesForNewGuild(event.getGuild());
-		fileManager.saveSettingsForGuild(new GuildSettings(event.getGuild()));
+		settingsManager.onJoinNewGuild(event.getGuild());
 	}
 
 	@Override
@@ -99,9 +112,11 @@ public class BigSausage extends ListenerAdapter {
 	}
 
 	public static void main(String[] args) throws LoginException, IOException{
+		startTime = System.currentTimeMillis();
 		final String TOKEN = Files.readAllLines(new File(TOKEN_FILE_NAME).toPath()).get(0);
 		System.out.println("Logging in...");
-		jda = new JDABuilder(TOKEN).build();
+		JDABuilder builder = JDABuilder.createDefault(TOKEN);
+		jda = builder.setActivity(Activity.watching("use \"" + PREFIX + "\" for commands")).build();
 		jda.addEventListener(new BigSausage());
 	}
 

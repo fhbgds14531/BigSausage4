@@ -1,22 +1,19 @@
 package net.mizobogames.bigsausage4.commands;
 
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.entities.MessageEmbed.Thumbnail;
-import net.dv8tion.jda.internal.handle.MessageCreateHandler;
 import net.mizobogames.bigsausage4.BigSausage;
 import net.mizobogames.bigsausage4.Reporting;
 import net.mizobogames.bigsausage4.Util;
-import net.mizobogames.bigsausage4.io.FileManager;
 import net.mizobogames.bigsausage4.io.audio.BSAudioManager;
 import net.mizobogames.bigsausage4.linking.Linkable;
 import net.mizobogames.bigsausage4.linking.Linkable.EnumLinkableType;
 import net.mizobogames.bigsausage4.linking.Trigger;
 
 import java.security.SecureRandom;
-import java.time.OffsetDateTime;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class CommandVoice extends CommandBase{
 
@@ -26,7 +23,7 @@ public class CommandVoice extends CommandBase{
 
 	@Override
 	public void execute(Message triggerMessage){
-		if(BigSausage.getFileManager().getSettingsForGuild(triggerMessage.getGuild()).isCommandedVoiceClips()){
+		if(Boolean.getBoolean(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("allow_commanded_voice_clips"))){
 			try{
 				List<Linkable> audioClips = BigSausage.getFileManager().getLinkablesForGuildOfType(triggerMessage.getGuild(), EnumLinkableType.AUDIO);
 				if(audioClips.size() == 0){
@@ -51,7 +48,13 @@ public class CommandVoice extends CommandBase{
 								}
 							}
 							if(count > 0){
-								objectsToLink.add(linkable);
+								int maxClips = Integer.parseInt(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("max_audio_clips_per_message"));
+								if(count > maxClips){
+									count = maxClips;
+								}
+								for(int i = 0; i < count; i++){
+									objectsToLink.add(linkable);
+								}
 							}
 						}
 					}
@@ -66,7 +69,7 @@ public class CommandVoice extends CommandBase{
 				assert state != null;
 				if(state.inVoiceChannel()){
 					VoiceChannel voiceChannel = state.getChannel();
-
+					Collections.reverse(objectsToLink);
 					for(Linkable linkable : objectsToLink){
 						BSAudioManager.queueFile(linkable.getLinkedFile(), triggerMessage.getGuild(), voiceChannel, sender, true);
 					}

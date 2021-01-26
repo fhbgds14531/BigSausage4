@@ -5,7 +5,7 @@ import net.mizobogames.bigsausage4.BigSausage;
 import net.mizobogames.bigsausage4.BigSausage.CommandShutdown;
 import net.mizobogames.bigsausage4.Util;
 import net.mizobogames.bigsausage4.commands.rolls.CommandRoll;
-import net.mizobogames.bigsausage4.io.FileManager;
+import org.apache.commons.collections4.list.TreeList;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -76,18 +76,24 @@ public class Commands{
 
 		@Override
 		public void execute(Message triggerMessage){
-			StringBuilder names = new StringBuilder();
-			Map<EnumPermissionLevel, List<CommandBase>> sortedCommands = Commands.getCommandsByPermissionLevel();
+			TreeList<String> sortedCommands = new TreeList<>();
+			Map<EnumPermissionLevel, List<CommandBase>> filteredCommands = Commands.getCommandsByPermissionLevel();
 			EnumPermissionLevel authorLevel = BigSausage.getFileManager().getPermissionsForUserInGuild(triggerMessage.getGuild(), triggerMessage.getAuthor());
-			for(EnumPermissionLevel level : sortedCommands.keySet()){
+			for(EnumPermissionLevel level : filteredCommands.keySet()){
 				if(level.getLevel() <= authorLevel.getLevel()){
-					for(CommandBase command : sortedCommands.get(level)){
-						names.append(command.getName() + ", ");
+					for(CommandBase command : filteredCommands.get(level)){
+						sortedCommands.add(command.getName());
 					}
 				}
 			}
-			names.replace(names.length()-2,names.length(), "");
-			names.insert(0, "Here are all the commands you have permission to use:```");
+			List<String> reversedCommands = new LinkedList<>(sortedCommands);
+			Collections.reverse(reversedCommands);
+			List<String> formatted = Util.formatListIntoEqualSpacedLinesWithCommas(reversedCommands, 6);
+			StringBuilder names = new StringBuilder("Here are all the commands you have permission to use:```");
+			for(String line : formatted){
+				names.append("\n");
+				names.append(line);
+			}
 			names.append("```");
 			sendReply(triggerMessage, names.toString());
 		}
@@ -96,7 +102,7 @@ public class Commands{
 	public static Map<EnumPermissionLevel, List<CommandBase>> getCommandsByPermissionLevel(){
 		Map<EnumPermissionLevel, List<CommandBase>> map = new HashMap<>();
 		for(EnumPermissionLevel level : EnumPermissionLevel.values()){
-			map.put(level, new ArrayList<CommandBase>());
+			map.put(level, new ArrayList<>());
 		}
 		for(Entry<String, CommandBase> e : commands.entrySet()){
 			map.get(e.getValue().getPermissionLevel()).add(e.getValue());

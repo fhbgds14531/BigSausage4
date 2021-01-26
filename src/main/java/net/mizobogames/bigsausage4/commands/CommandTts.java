@@ -3,7 +3,6 @@ package net.mizobogames.bigsausage4.commands;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.mizobogames.bigsausage4.BigSausage;
-import net.mizobogames.bigsausage4.io.FileManager;
 
 import java.security.SecureRandom;
 import java.util.List;
@@ -16,7 +15,7 @@ public class CommandTts extends CommandBase{
 
 	@Override
 	public void execute(Message triggerMessage){
-		if(BigSausage.getFileManager().getSettingsForGuild(triggerMessage.getGuild()).isAllowTtsMessages()){
+		if(Boolean.getBoolean(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("allow_tts"))){
 			List<String> ttsList = BigSausage.getFileManager().getTtsListForGuild(triggerMessage.getGuild());
 			if(ttsList.isEmpty()){
 				sendMessageToChannel(triggerMessage.getTextChannel(), "The tts file is empty. Try adding some!");

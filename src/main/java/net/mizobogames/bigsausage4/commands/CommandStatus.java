@@ -2,10 +2,10 @@ package net.mizobogames.bigsausage4.commands;
 
 import net.dv8tion.jda.api.entities.Message;
 import net.mizobogames.bigsausage4.BigSausage;
-import net.mizobogames.bigsausage4.GuildSettings;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class CommandStatus extends CommandBase{
 
@@ -15,24 +15,25 @@ public class CommandStatus extends CommandBase{
 
 	@Override
 	public void execute(Message triggerMessage){
-		GuildSettings settings = BigSausage.getFileManager().getSettingsForGuild(triggerMessage.getGuild());
+		Properties guildProperties = BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild());
 		List<String> lines = new ArrayList<>();
 
-		lines.add("message-parsing-audio:        " + getValue(settings.isMessageParsingAudioTriggers()));
-		lines.add("message-parsing-images:       " + getValue(settings.isMessageParsingImageTriggers()));
-		lines.add("commanded-audio:              " + getValue(settings.isCommandedVoiceClips()));
-		lines.add("commanded-images:             " + getValue(settings.isCommandedImages()));
-		lines.add("multi-linking:                " + getValue(settings.isAllowMultipleLinkablesPerMessage()));
-		lines.add("allow-tts:                    " + getValue(settings.isAllowTtsMessages()));
-		lines.add("max-queued-clips-per-message: " + settings.getMaxAudioClipsToQueuePerMessage());
+		lines.add("allow_message_parsing_audio: " + guildProperties.getProperty("allow_message_parsing_audio"));
+		lines.add("allow_message_parsing_image: " + guildProperties.getProperty("allow_message_parsing_image"));
+		lines.add("allow_commanded_voice_clips: " + guildProperties.getProperty("allow_commanded_voice_clips"));
+		lines.add("allow_commanded_images:      " + guildProperties.getProperty("allow_commanded_images"));
+		lines.add("allow_multi_linking:         " + guildProperties.getProperty("allow_multi_linking"));
+		lines.add("allow_tts:                   " + guildProperties.getProperty("allow_tts"));
+		lines.add("max_audio_clips_per_message: " + guildProperties.getProperty("max_audio_clips_per_message"));
+		lines.add("max_dice_rolls_to_track:     " + guildProperties.getProperty("max_dice_rolls_to_track"));
 
-		String reply = "Here is the status of all the settings for this server:```";
+		StringBuilder reply = new StringBuilder("Here is the status of all the settings for this server:```");
 		for(String s : lines){
-			reply += "\n" + s;
+			reply.append("\n").append(s);
 		}
-		reply += "```";
+		reply.append("```");
 
-		sendMessageToChannel(triggerMessage.getTextChannel(), reply);
+		sendMessageToChannel(triggerMessage.getTextChannel(), reply.toString());
 	}
 
 	private String getValue(boolean bool){
