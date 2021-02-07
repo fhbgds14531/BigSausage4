@@ -28,11 +28,11 @@ import java.util.List;
 
 public class BigSausage extends ListenerAdapter {
 
-	public static final String PREFIX = "!bd";
-	private static final String TOKEN_FILE_NAME = "BigSausageDEBUG.token";
+	public static final String PREFIX = "!bs";
+	private static final String TOKEN_FILE_NAME = "BigSausage.token";
 	public static final long ME = 198575970624471040L;
 	public static User MY_USER = null;
-	public static final String VERSION = "4.2";
+	public static final String VERSION = "4.2.1";
 	public static final String CHANGELOG = "Reworked the settings behind the scenes to make use of java.util.Properties.";
 	private static final String IGNORE_TOKEN = "<i";
 
@@ -122,6 +122,7 @@ public class BigSausage extends ListenerAdapter {
 
 	public static void shutdown(){
 		fileManager.saveAll();
+		settingsManager.saveAll();
 		jda.shutdown();
 		System.exit(0);
 	}

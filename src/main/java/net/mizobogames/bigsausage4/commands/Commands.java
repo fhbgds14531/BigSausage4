@@ -39,7 +39,7 @@ public class Commands{
 				"have been added", "%p %n", EnumPermissionLevel.MEDIUM));
 		addCommand(new CommandResetPermissions("reset-permissions", "reset-all-permissions-in-this-server", "Resets all permission levels for all users "+
 				"in this server to their default values.", "Use %p %n to reset all permissions.", "%p %n", EnumPermissionLevel.SERVER_OWNER));
-		addCommand(new CommandUpdateSetting("update-setting", "update-setting", "Changes a setting for this server.", "Use %p %n <setting-name> "+
+		addCommand(new CommandUpdateSetting("settings", "settings", "Changes a setting for this server.", "Use %p %n <setting-name> "+
 				"<value> to update a setting. Use %p %n to get a list of setting names.", "%p %n <setting-name> <value (\"enabled\", \"disabled\", or a positive integer)>", EnumPermissionLevel.ADMIN));
 		addCommand(new CommandUpdatePermission("update-permission", "update-permission", "Updates the specified user's permission level in this server." ,
 											   "Use %p %n <User mention> <permission level> to update a user's permission level.", "%p %n <@user> <permission level>", EnumPermissionLevel.ADMIN));

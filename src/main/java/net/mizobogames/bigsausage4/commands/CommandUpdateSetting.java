@@ -10,6 +10,8 @@ import java.util.Properties;
 
 public class CommandUpdateSetting extends CommandBase{
 
+	List<String> acceptableBooleanStrings = Arrays.asList("enabled", "enable", "true", "disabled", "disable", "false");
+
 	public CommandUpdateSetting(String commandLongName, String commandTriggerString, String commandDescription, String helpText, String usageText, EnumPermissionLevel minimumPermissionLevel){
 		super(commandLongName, commandTriggerString, commandDescription, helpText, usageText, minimumPermissionLevel);
 	}
@@ -28,9 +30,9 @@ public class CommandUpdateSetting extends CommandBase{
 		}else{
 			String booleanResponse = "Invalid argument! That setting requires a value of either \"enable\" or \"disable\".";
 			String integerResponse = "Invalid argument! That setting requires a positive integer.";
-			String setting = args.get(2);
-			String value = args.get(3);
-			if(!(value.contentEquals("enable") || value.contentEquals("disable") || Util.isInteger(value, 10))){
+			String setting = args.get(2).toLowerCase();
+			String value = args.get(3).toLowerCase();
+			if(!(acceptableBooleanStrings.contains(value) || Util.isInteger(value, 10))){
 				sendMessageToChannel(triggerMessage.getTextChannel(), "Invalid argument. Setting values must either be \"enable\", \"disable\", or an integer.");
 				return;
 			}
@@ -75,14 +77,15 @@ public class CommandUpdateSetting extends CommandBase{
 					sendMessageToChannel(triggerMessage.getTextChannel(), "Unknown setting! Valid setting names are : ```" +
 							"allow_message_parsing_audio		allow_message_parsing_image		allow_commanded_voice_clips			allow_commanded_images\n" +
 							"allow_multi_link				allow_tts			 max_audio_clips_per_message		max_dice_rolls_to_track		all```");
-					break;
+					return;
 			}
+			BigSausage.getFileManager().savePropertiesForGuild(triggerMessage.getGuild(), guildProperties);
 			sendMessageToChannel(triggerMessage.getTextChannel(), "Setting updated!");
 		}
 
 	}
 
 	private boolean getState(String s){
-		return s.contentEquals("enabled");
+		return s.toLowerCase().contentEquals("enabled") || s.toLowerCase().contentEquals("enable") || s.toLowerCase().contentEquals("true");
 	}
 }

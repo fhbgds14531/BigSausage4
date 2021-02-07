@@ -22,7 +22,7 @@ public class CommandStatus extends CommandBase{
 		lines.add("allow_message_parsing_image: " + guildProperties.getProperty("allow_message_parsing_image"));
 		lines.add("allow_commanded_voice_clips: " + guildProperties.getProperty("allow_commanded_voice_clips"));
 		lines.add("allow_commanded_images:      " + guildProperties.getProperty("allow_commanded_images"));
-		lines.add("allow_multi_linking:         " + guildProperties.getProperty("allow_multi_linking"));
+		lines.add("allow_multi_link:            " + guildProperties.getProperty("allow_multi_link"));
 		lines.add("allow_tts:                   " + guildProperties.getProperty("allow_tts"));
 		lines.add("max_audio_clips_per_message: " + guildProperties.getProperty("max_audio_clips_per_message"));
 		lines.add("max_dice_rolls_to_track:     " + guildProperties.getProperty("max_dice_rolls_to_track"));

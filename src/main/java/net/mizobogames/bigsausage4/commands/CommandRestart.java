@@ -2,6 +2,7 @@ package net.mizobogames.bigsausage4.commands;
 
 import net.dv8tion.jda.api.entities.Message;
 import net.mizobogames.bigsausage4.BigSausage;
+import net.mizobogames.bigsausage4.Util;
 
 import java.io.IOException;
 
@@ -14,9 +15,11 @@ public class CommandRestart extends CommandBase{
 	@Override
 	public void execute(Message triggerMessage){
 		try {
-			triggerMessage.getTextChannel().sendMessage("Restarting...").queue();
-			Runtime.getRuntime().exec("cmd /c start \"\" restart.bat");
-			BigSausage.shutdown();
+			if(Util.userHasPermissionInGuild(triggerMessage.getAuthor(), triggerMessage.getGuild(), EnumPermissionLevel.BOT_CREATOR)){
+				triggerMessage.getTextChannel().sendMessage("Restarting...").queue();
+				Runtime.getRuntime().exec("cmd /c start \"\" restart.bat");
+				BigSausage.shutdown();
+			}
 		} catch (IOException e) {
 			BigSausage.reporter.reportAndPrintError(e);
 		}

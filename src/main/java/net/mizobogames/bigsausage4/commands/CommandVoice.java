@@ -23,7 +23,7 @@ public class CommandVoice extends CommandBase{
 
 	@Override
 	public void execute(Message triggerMessage){
-		if(Boolean.getBoolean(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("allow_commanded_voice_clips"))){
+		if(Boolean.parseBoolean(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("allow_commanded_voice_clips"))){
 			try{
 				List<Linkable> audioClips = BigSausage.getFileManager().getLinkablesForGuildOfType(triggerMessage.getGuild(), EnumLinkableType.AUDIO);
 				if(audioClips.size() == 0){

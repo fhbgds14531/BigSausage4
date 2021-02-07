@@ -22,7 +22,7 @@ public class CommandImage extends CommandBase{
 
 	@Override
 	public void execute(Message triggerMessage){
-		if(Boolean.getBoolean(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("allow_commanded_images"))){
+		if(Boolean.parseBoolean(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("allow_commanded_images"))){
 			try{
 				Map<Linkable, Integer> objectsToLink = new HashMap<>();
 				List<String> args = Arrays.asList(triggerMessage.getContentRaw().split(" "));

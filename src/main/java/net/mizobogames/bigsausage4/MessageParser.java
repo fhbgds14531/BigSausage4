@@ -29,8 +29,8 @@ public class MessageParser{
 			String property1 = properties.getProperty("allow_message_parsing_audio");
 			String property2 = properties.getProperty("allow_message_parsing_image");
 
-			guildSettingsMap.put(EnumLinkableType.AUDIO, Boolean.getBoolean(BigSausage.settingsManager.getSettingsForGuild(guild).getProperty("allow_message_parsing_audio")));
-			guildSettingsMap.put(EnumLinkableType.IMAGE, Boolean.getBoolean(BigSausage.settingsManager.getSettingsForGuild(guild).getProperty("allow_message_parsing_image")));
+			guildSettingsMap.put(EnumLinkableType.AUDIO, Boolean.parseBoolean(BigSausage.settingsManager.getSettingsForGuild(guild).getProperty("allow_message_parsing_audio")));
+			guildSettingsMap.put(EnumLinkableType.IMAGE, Boolean.parseBoolean(BigSausage.settingsManager.getSettingsForGuild(guild).getProperty("allow_message_parsing_image")));
 			parseForTriggersPerGuild.put(guild, guildSettingsMap);
 		}
 	}
@@ -107,7 +107,7 @@ public class MessageParser{
 								try{
 									BSAudioManager.queueFile(linkable.getLinkedFile(), m.getGuild(), voiceChannel, sender, false);
 									linkedSoFar++;
-									if(!Boolean.getBoolean(settings.getProperty("allow_multi_linking"))) return;
+									if(!Boolean.parseBoolean(settings.getProperty("allow_multi_linking"))) return;
 									if(linkedSoFar >= Integer.parseInt(settings.getProperty("max_audio_clips_per_message"))) return;
 								}catch(Exception e){
 									BigSausage.reporter.reportAndPrintError(e);
@@ -118,7 +118,7 @@ public class MessageParser{
 							if(parseForTriggersPerGuild.get(m.getGuild()).get(EnumLinkableType.IMAGE)){
 								m.getTextChannel().sendFile(linkable.getLinkedFile()).queue();
 								linkedSoFar++;
-								if(!Boolean.getBoolean(settings.getProperty("allow_multi_linking"))) return;
+								if(!Boolean.parseBoolean(settings.getProperty("allow_multi_linking"))) return;
 							}
 							break;
 					}

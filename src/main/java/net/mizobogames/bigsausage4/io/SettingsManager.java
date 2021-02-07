@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 
 public class SettingsManager {
@@ -45,6 +46,11 @@ public class SettingsManager {
 		return propertiesMap.get(guild);
 	}
 
+	public void updatePropertiesForGuild(Guild guild, Properties guildProperties){
+		BigSausage.getFileManager().savePropertiesForGuild(guild, guildProperties);
+		propertiesMap.put(guild, guildProperties);
+	}
+
 	private SettingsManager load(List<Guild> guilds){
 		System.out.println("Loading settings for " + guilds.size() + " guilds...");
 		long time1 = System.currentTimeMillis();
@@ -67,4 +73,9 @@ public class SettingsManager {
 		loadGuild(guild);
 	}
 
+	public void saveAll(){
+		for(Entry<Guild, Properties> entry : propertiesMap.entrySet()){
+			BigSausage.getFileManager().savePropertiesForGuild(entry.getKey(), entry.getValue());
+		}
+	}
 }
