@@ -10,10 +10,8 @@ import net.mizobogames.bigsausage4.linking.Linkable.EnumLinkableType;
 import net.mizobogames.bigsausage4.linking.Trigger;
 
 import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class CommandVoice extends CommandBase{
 
@@ -24,35 +22,38 @@ public class CommandVoice extends CommandBase{
 	@Override
 	public void execute(Message triggerMessage){
 		if(Boolean.parseBoolean(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("allow_commanded_voice_clips"))){
+			int maxClips = Integer.parseInt(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("max_audio_clips_per_message"));
 			try{
 				List<Linkable> audioClips = BigSausage.getFileManager().getLinkablesForGuildOfType(triggerMessage.getGuild(), EnumLinkableType.AUDIO);
 				if(audioClips.size() == 0){
 					sendReply(triggerMessage, "There are no audio clips! Try adding some!");
 					return;
 				}
-				List<Linkable> objectsToLink = new LinkedList<>();
+				Map<Linkable, Integer> objectsToLink = new LinkedHashMap<>();
 				List<String> args = new LinkedList<>(Arrays.asList(triggerMessage.getContentRaw().split(" ")));
 				if(args.size() > 2){
 					if(Util.isInteger(args.get(2), 10)){
 						int numToLink = Integer.parseInt(args.get(2));
+						if(numToLink > maxClips) numToLink = maxClips;
 						SecureRandom random = new SecureRandom();
 						for(int i = 0; i < numToLink; i++){
-							objectsToLink.add(audioClips.get(random.nextInt(audioClips.size())));
+							objectsToLink.put(audioClips.get(random.nextInt(audioClips.size())), 1);
 						}
 					}else{
 						for(String s : args){
 							int count = 0;
+							int num = 0;
 							for(Linkable linkable : audioClips){
 								for(Trigger trigger : linkable.getTriggers()){
-									if(s.toLowerCase().contentEquals(trigger.getTrigger().toLowerCase())) count++;
-								}
-								if(count > 0){
-									int maxClips = Integer.parseInt(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("max_audio_clips_per_message"));
-									if(count > maxClips){
-										count = maxClips;
-									}
-									for(int i = 0; i < count; i++){
-										objectsToLink.add(linkable);
+									if(s.toLowerCase().contentEquals(trigger.getTrigger().toLowerCase())){
+										if(objectsToLink.containsKey(linkable)){
+											num = objectsToLink.get(linkable);
+											if(num >= maxClips){
+												break;
+											}
+										}else{
+											objectsToLink.put(linkable, num + 1);
+										}
 									}
 								}
 							}
@@ -60,7 +61,7 @@ public class CommandVoice extends CommandBase{
 					}
 				}else{
 					SecureRandom random = new SecureRandom();
-					objectsToLink.add(audioClips.get(random.nextInt(audioClips.size())));
+					objectsToLink.put(audioClips.get(random.nextInt(audioClips.size())), 1);
 				}
 				User sender = triggerMessage.getAuthor();
 				Member member = triggerMessage.getGuild().getMember(sender);
@@ -69,9 +70,10 @@ public class CommandVoice extends CommandBase{
 				assert state != null;
 				if(state.inVoiceChannel()){
 					VoiceChannel voiceChannel = state.getChannel();
-					Collections.reverse(objectsToLink);
-					for(Linkable linkable : objectsToLink){
-						BSAudioManager.queueFile(linkable.getLinkedFile(), triggerMessage.getGuild(), voiceChannel, sender, true);
+					for(Entry<Linkable, Integer> entry : objectsToLink.entrySet()){
+						for(int i = 0; i < entry.getValue(); i++){
+							BSAudioManager.queueFile(entry.getKey().getLinkedFile(), triggerMessage.getGuild(), voiceChannel, sender, true);
+						}
 					}
 				}else{
 					sendReply(triggerMessage, "You need to be in a voice channel to use that command.");
