@@ -8,9 +8,7 @@ import net.mizobogames.bigsausage4.commands.EnumPermissionLevel;
 import java.io.PrintStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Util{
 
@@ -105,6 +103,16 @@ public class Util{
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 		LocalDateTime now = LocalDateTime.now();
 		return dtf.format(now);
+	}
+
+	public static <K, V> Map<K, V> reverseMapOrder(Map<K, V> in){
+		if (in == null) return null;
+		LinkedHashMap<K, V> m = new LinkedHashMap<>();
+		List<K> keys = new ArrayList<>(in.keySet());
+		List<V> values = new ArrayList<>(in.values());
+		for (int i = in.size() - 1; i >= 0; i--)
+			m.put(keys.get(i), values.get(i));
+		return m;
 	}
 
 	public static String getDisplayNameAndIdForUser(User user){

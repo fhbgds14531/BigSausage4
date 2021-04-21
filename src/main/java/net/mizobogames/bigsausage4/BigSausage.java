@@ -32,8 +32,8 @@ public class BigSausage extends ListenerAdapter {
 	private static final String TOKEN_FILE_NAME = "BigSausage.token";
 	public static final long ME = 198575970624471040L;
 	public static User MY_USER = null;
-	public static final String VERSION = "4.2.1";
-	public static final String CHANGELOG = "Reworked the settings behind the scenes to make use of java.util.Properties.";
+	public static final String VERSION = "4.2.2";
+	public static final String CHANGELOG = "Fixed ordering of linkables in commands.";
 	private static final String IGNORE_TOKEN = "<i";
 
 	public static Commands commands;

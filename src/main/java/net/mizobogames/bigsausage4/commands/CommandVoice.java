@@ -10,9 +10,9 @@ import net.mizobogames.bigsausage4.linking.Linkable.EnumLinkableType;
 import net.mizobogames.bigsausage4.linking.Trigger;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 public class CommandVoice extends CommandBase{
@@ -30,8 +30,8 @@ public class CommandVoice extends CommandBase{
 					sendReply(triggerMessage, "There are no audio clips! Try adding some!");
 					return;
 				}
-				List<Linkable> objectsToLink = new ArrayList<>();
-				List<String> args = Arrays.asList(triggerMessage.getContentRaw().split(" "));
+				List<Linkable> objectsToLink = new LinkedList<>();
+				List<String> args = new LinkedList<>(Arrays.asList(triggerMessage.getContentRaw().split(" ")));
 				if(args.size() > 2){
 					if(Util.isInteger(args.get(2), 10)){
 						int numToLink = Integer.parseInt(args.get(2));
@@ -40,20 +40,20 @@ public class CommandVoice extends CommandBase{
 							objectsToLink.add(audioClips.get(random.nextInt(audioClips.size())));
 						}
 					}else{
-						for(Linkable linkable : audioClips){
+						for(String s : args){
 							int count = 0;
-							for(Trigger trigger : linkable.getTriggers()){
-								for(String s : args){
+							for(Linkable linkable : audioClips){
+								for(Trigger trigger : linkable.getTriggers()){
 									if(s.toLowerCase().contentEquals(trigger.getTrigger().toLowerCase())) count++;
 								}
-							}
-							if(count > 0){
-								int maxClips = Integer.parseInt(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("max_audio_clips_per_message"));
-								if(count > maxClips){
-									count = maxClips;
-								}
-								for(int i = 0; i < count; i++){
-									objectsToLink.add(linkable);
+								if(count > 0){
+									int maxClips = Integer.parseInt(BigSausage.settingsManager.getSettingsForGuild(triggerMessage.getGuild()).getProperty("max_audio_clips_per_message"));
+									if(count > maxClips){
+										count = maxClips;
+									}
+									for(int i = 0; i < count; i++){
+										objectsToLink.add(linkable);
+									}
 								}
 							}
 						}
